@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"ai-ingerence-pipeline/pkg/protocol"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
@@ -35,9 +36,9 @@ func (c *Cache) Set(ctx context.Context, key string, value string, ttl time.Dura
 	return c.client.Set(ctx, key, value, ttl).Err()
 }
 
-// Hashes the prompt for feeding to redis.
-func (c *Cache) HashPrompt(prompt string) string {
-	hash := sha256.Sum256([]byte(prompt))
+// Hashes the prompt for feeding to redis. Takes the model as well since different models yield different responses.
+func (c *Cache) HashRequest(request *protocol.PromptRequest) string {
+	hash := sha256.Sum256([]byte(*request.Model + *request.Prompt))
 	return "cache:prompt:" + hex.EncodeToString(hash[:])
 }
 
