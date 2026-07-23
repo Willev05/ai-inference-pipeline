@@ -1,0 +1,22 @@
+#Stage 1, compile go app
+FROM golang:1.22-alpine AS builder
+WORKDIR /app
+
+#Prep dependencies
+COPY go.sum go.mod ./
+RUN go mod download
+
+#Then copy everything and build the bin
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux go build -o /app/api-endpoint ./cmd/api-endpoint
+
+#Stage 2, runtime
+FROM alpine:latest
+
+RUN apk --no-cache add ca-certificates
+
+WORKDIR /root/
+COPY --from=builder /app/api-endpoint .
+
+EXPOSE 8080
+CMD [ "./api-endpoint" ]
